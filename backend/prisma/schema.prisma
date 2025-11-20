@@ -1,0 +1,69 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  name         String?
+  passwordHash String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  memberships Membership[]
+
+  invitesReceived Invite[] @relation("InvitesReceived")
+
+  activeCompanyId String?
+}
+
+model Company {
+  id        String   @id @default(uuid())
+  name      String
+  logoUrl   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  members Membership[]
+  invites Invite[]
+}
+
+model Membership {
+  id        String   @id @default(uuid())
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+  company   Company  @relation(fields: [companyId], references: [id])
+  companyId String
+  role      Role     @default(MEMBER)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, companyId])
+}
+
+model Invite {
+  id        String   @id @default(uuid())
+  email     String
+  company   Company  @relation(fields: [companyId], references: [id])
+  companyId String
+  token     String   @unique
+  role      Role     @default(MEMBER)
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+  used      Boolean  @default(false)
+
+  userId String?
+  user   User?   @relation("InvitesReceived", fields: [userId], references: [id])
+
+  @@index([email])
+}
+
+enum Role {
+  OWNER
+  ADMIN
+  MEMBER
+}
