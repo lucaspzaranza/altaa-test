@@ -8,12 +8,14 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "moduleResolution": "node",
-    "types": [
-      "node"
+    "typeRoots": [
+      "./src/types",
+      "./node_modules/@types"
     ]
   },
   "include": [
     "src/**/*.ts",
     "src/**/*.d.ts",
+    "src/types/**/*.d.ts"
   ]
 }

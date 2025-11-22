@@ -1,14 +1,14 @@
-import { User } from '../../generated/client';
-
 declare global {
   namespace Express {
+    interface UserPayload {
+      id: string;
+      email: string;
+      activeCompanyId?: string | null;
+      role?: string;
+    }
+
     interface Request {
-      user?: {
-        id: string;
-        email: string;
-        activeCompanyId?: string | null;
-        role?: string;
-      };
+      user?: UserPayload;
     }
   }
 }
