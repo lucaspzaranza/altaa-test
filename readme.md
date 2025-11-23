@@ -117,5 +117,22 @@ docker compose up -d
 
 ---
 
+## Rodando sem Docker
+
+É possível rodar o projeto sem usar o Docker. Para isso:
+
+1. Vá na pasta do backend e execute:
+```bash
+npm install
+npm run dev
+```
+2. Vá na pasta do frontend e execute o mesmo procedimento:
+```bash
+npm install
+npm run dev
+```
+
+---
+
 Feito por Lucas Zaranza
 
