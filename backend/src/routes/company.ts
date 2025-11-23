@@ -35,31 +35,105 @@ router.get("/companies", authMiddleware, async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
-router.post("/:id/invite", authMiddleware, requireCompany(true), authorize(["OWNER", "ADMIN"]), async (req, res, next) => {
-  try {
-    const companyId = req.params.id;
-    const { email, role } = req.body;
-    if (!email) return res.status(400).json({ message: "Email required" });
+router.post(
+  "/:id/invite",
+  authMiddleware,
+  requireCompany(true),
+  authorize(["OWNER", "ADMIN"]),
+  async (req, res, next) => {
+    try {
+      const companyId = req.params.id;
+      const { email, role } = req.body;
 
-    const existingMembership = await prisma.membership.findUnique({
-      where: { userId_companyId: { userId: req.user!.id, companyId } }
-    });
+      if (!email) {
+        return res.status(400).json({ message: "Email required" });
+      }
 
-    const existingInvite = await prisma.invite.findFirst({
-      where: { email, companyId, used: false, expiresAt: { gt: new Date() } },
-      orderBy: { createdAt: "desc" },
-    });
-    if (existingInvite) return res.json({ invite: existingInvite });
+      const user = await prisma.user.findUnique({ where: { email } });
 
-    const token = uuidv4();
-    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
-    const invite = await prisma.invite.create({
-      data: { email, companyId, token, role: role ?? "MEMBER", expiresAt }
-    });
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
 
-    res.json({ invite });
-  } catch (err) { next(err); }
-});
+      const membership = await prisma.membership.findFirst({
+        where: { userId: user.id, companyId }
+      });
+
+      if (membership) {
+        return res.status(400).json({
+          message: "User is already a member of this company"
+        });
+      }
+
+      const existingInvite = await prisma.invite.findFirst({
+        where: {
+          email,
+          companyId,
+          used: false,
+          expiresAt: { gt: new Date() }
+        },
+        orderBy: { createdAt: "desc" }
+      });
+
+      if (existingInvite) {
+        return res.json({ invite: existingInvite });
+      }
+
+      const token = uuidv4();
+      const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+
+      const invite = await prisma.invite.create({
+        data: {
+          email,
+          companyId,
+          token,
+          role: role ?? "MEMBER",
+          expiresAt
+        }
+      });
+
+      console.log(`
+        ------------------------------------
+                SIMULATED EMAIL SENT
+        ------------------------------------
+        To: ${email}
+        Subject: Invitation to join the company
+
+        You have been invited to join the company.
+
+        Company ID: ${companyId}
+        Role: ${role ?? "MEMBER"}
+
+        Use this invite token to accept the invitation:
+        ${token}
+
+        Expires at: ${expiresAt.toISOString()}
+
+        ------------------------------------
+      `);
+
+      return res.json({
+        message: "Invite created and email simulated",
+        invite,
+        emailPreview: {
+          to: email,
+          subject: "Convite para empresa",
+          body: `
+            Você foi convidado para fazer parte da empresa.
+            Role: ${role ?? "MEMBER"}
+
+            Use o token para aceitar o convite:
+            ${token}
+
+            Expira em: ${expiresAt.toISOString()}
+          `
+        }
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
+);
 
 router.post("/:id/select", authMiddleware, requireCompany(true), async (req, res, next) => {
   try {

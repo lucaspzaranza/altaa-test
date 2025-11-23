@@ -18,6 +18,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
+import { api } from "@/lib/api";
 
 const SignupSchema = z.object({
   name: z.string().min(2, "Nome muito curto"),
@@ -44,7 +45,7 @@ export default function SignupPage() {
     try {
       setLoading(true);
 
-      const res = await fetch("http://localhost:4000/auth/signup", {
+      const res = await fetch(api("/auth/signup"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(values),

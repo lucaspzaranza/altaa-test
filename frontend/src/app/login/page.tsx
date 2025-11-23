@@ -19,6 +19,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
+import { api } from "@/lib/api";
 
 const LoginSchema = z.object({
   email: z.string().email("E-mail inválido"),
@@ -44,10 +45,10 @@ export default function LoginPage() {
     try {
       setLoading(true);
 
-      const res = await fetch("http://localhost:4000/auth/login", {
+      const res = await fetch(api("/auth/login"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        credentials: "include", // mantém o refreshToken httpOnly
+        credentials: "include",
         body: JSON.stringify(values),
       });
 
@@ -59,10 +60,9 @@ export default function LoginPage() {
 
       const data = await res.json();
 
-      // 🔥 Salvar no AuthContext
       login(data.accessToken, data.user);
 
-      toast.success("Login realizado com sucesso!");
+      toast.success(`Bem-vindo(a), ${data.user.name}!`);
       router.push("/dashboard");
 
     } catch (err) {
