@@ -18,6 +18,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
+import { useAuth } from "@/context/AuthContext";
 
 const LoginSchema = z.object({
   email: z.string().email("E-mail inválido"),
@@ -29,6 +30,7 @@ type LoginValues = z.infer<typeof LoginSchema>;
 export default function LoginPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const { login } = useAuth();
 
   const form = useForm<LoginValues>({
     resolver: zodResolver(LoginSchema),
@@ -45,7 +47,7 @@ export default function LoginPage() {
       const res = await fetch("http://localhost:4000/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        credentials: "include",
+        credentials: "include", // mantém o refreshToken httpOnly
         body: JSON.stringify(values),
       });
 
@@ -54,6 +56,11 @@ export default function LoginPage() {
         toast.error(error.message || "Erro ao fazer login");
         return;
       }
+
+      const data = await res.json();
+
+      // 🔥 Salvar no AuthContext
+      login(data.accessToken, data.user);
 
       toast.success("Login realizado com sucesso!");
       router.push("/dashboard");

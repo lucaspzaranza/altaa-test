@@ -24,14 +24,14 @@ router.get("/companies", authMiddleware, async (req, res, next) => {
     const perPage = Math.min(Number(req.query.perPage ?? 10), 50);
     const skip = (page - 1) * perPage;
     const userId = req.user!.id;
-    const [items, total] = await Promise.all([
+    const [companies, total] = await Promise.all([
       prisma.company.findMany({
         where: { members: { some: { userId } } },
         skip, take: perPage, orderBy: { createdAt: "desc" }
       }),
       prisma.company.count({ where: { members: { some: { userId } } } })
     ]);
-    res.json({ items, total, page, perPage });
+    res.json({ companies, total, page, perPage });
   } catch (err) { next(err); }
 });
 
